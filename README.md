@@ -1,3 +1,3 @@
 # mini-gpt
-# mini-gpt
-hello world
+
+Toy project to implement very simple transformer from scratch using pytorch
