@@ -18,8 +18,11 @@ class LMStream:
         self.device = device
 
     def get_batch(self) -> Tuple[torch.Tensor, torch.Tensor]:
-        starting_indexes = torch.randint(0, len(self.ids) - self.block_size, (self.batch_size,))
-        x_s = starting_indexes.unsqueeze(1) + torch.arange(self.block_size)
-        y_s = starting_indexes.unsqueeze(1) + torch.arange(1, self.block_size+1)
+        starting_indexes = torch.randint(0, len(self.ids) - self.block_size, (self.batch_size, 1)) # (B, 1)
+        x_s = starting_indexes + torch.arange(self.block_size) # (B, 1) + (T,) -> (B, 1) + (1, T)
+        y_s = x_s + 1 # add mask of 1
+
+        x_s = self.ids[x_s]
+        y_s = self.ids[y_s]
 
         return x_s.to(self.device), y_s.to(self.device)
