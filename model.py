@@ -14,6 +14,18 @@ class GPTConfig:
     d_ffn: int
     dropout: float
 
+def init_weights(module):
+        if isinstance(module, nn.Linear):
+            nn.init.normal_(module.weight, mean=0.0, std=0.02)
+            if module.bias is not None:
+                nn.init.zeros_(module.bias)
+
+        elif isinstance(module, nn.Embedding):
+            nn.init.normal_(module.weight, mean=0.0, std=0.02)
+
+        elif isinstance(module, nn.LayerNorm):
+            nn.init.ones_(module.weight)
+            nn.init.zeros_(module.bias)
 
 class MiniGPT(nn.Module):
     def __init__(self, config: GPTConfig):
@@ -24,6 +36,7 @@ class MiniGPT(nn.Module):
         self.transformer_blocks = nn.ModuleList([TransformerBlock(config.d_model, config.n_heads, config.block_size, config.d_ffn) for _ in range(config.n_layers)])
         self.final_ln = nn.LayerNorm(config.d_model)
         self.final_linear = nn.Linear(config.d_model, config.vocab_size)
+        self.apply(init_weights)
         self.final_linear.weight = self.embeddings.token_emb.weight
         self.loss = nn.CrossEntropyLoss()
 

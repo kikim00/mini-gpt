@@ -30,7 +30,7 @@ class SelfAttention(nn.Module):
 
         scores = (Q @ K.transpose(-2, -1)) / math.sqrt(self.d_k) # (B, T, d_k) @ (B, d_k, T) -> (B, T, T)
         mask = self.causal_mask[:, :T, :T]
-        scores = scores.masked_fill(~mask, torch.finfo(scores.dtype).min)
+        scores = scores.masked_fill(~mask, -1e4) # low enough number to make softmax 0
 
         out = F.softmax(scores, dim=-1) @ V # (B, T, d_v)
 
