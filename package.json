@@ -1,0 +1,13 @@
+{
+  "name": "mini-gpt",
+  "private": true,
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  },
+  "scripts": {
+    "lint": "ruff check .",
+    "format": "ruff format .",
+    "lint:prettier": "prettier --check \"**/*.{md,json,yml,yaml}\"",
+    "format:prettier": "prettier --write \"**/*.{md,json,yml,yaml}\""
+  }
+}

@@ -2,3 +2,6 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .vscode/
+train.log
+**/train.log
+node_modules/

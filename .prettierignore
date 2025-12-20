@@ -1,0 +1,16 @@
+__pycache__/
+.venv/
+*.pt
+*.pth
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.pdf
+*.zip
+*.tar
+*.gz
+*.ckpt
+*.bin
+*.pickle
+*.pkl

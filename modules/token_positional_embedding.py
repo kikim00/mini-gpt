@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.nn.init as init
+
 
 class TokenPositionalEmbedding(nn.Module):
     def __init__(self, vocab_size, block_size, dim_model):
@@ -13,7 +13,9 @@ class TokenPositionalEmbedding(nn.Module):
         # x: (B, T) shape ids for tokens
         B, T = x.shape
 
-        token_embeddings = self.token_emb(x) # (B, T, dim_model)
-        position_embeddings = self.pos_emb(torch.arange(T, device=x.device)) # (T, dim_model)
+        token_embeddings = self.token_emb(x)  # (B, T, dim_model)
+        position_embeddings = self.pos_emb(
+            torch.arange(T, device=x.device)
+        )  # (T, dim_model)
 
         return token_embeddings + position_embeddings

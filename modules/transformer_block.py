@@ -1,5 +1,7 @@
 import torch.nn as nn
+
 from modules.multi_head_attention import MultiHeadAttention
+
 
 class TransformerBlock(nn.Module):
     def __init__(self, d_model, num_heads, block_size, dim_ffn):
@@ -14,15 +16,13 @@ class TransformerBlock(nn.Module):
         self.dropout = nn.Dropout(0.1)
 
         self.ffn = nn.Sequential(
-            nn.Linear(d_model, dim_ffn),
-            nn.GELU(),
-            nn.Linear(dim_ffn, d_model)
+            nn.Linear(d_model, dim_ffn), nn.GELU(), nn.Linear(dim_ffn, d_model)
         )
-    
+
     def forward(self, x):
         # x = (B, T, C)
         normalized_x = self.ln1(x)
-        after_mha = self.mha(normalized_x) # pre-LN
+        after_mha = self.mha(normalized_x)  # pre-LN
         x = x + self.dropout(after_mha)
 
         normalized_x = self.ln2(x)
@@ -30,4 +30,3 @@ class TransformerBlock(nn.Module):
         x = x + self.dropout(after_ffn)
 
         return x
-
