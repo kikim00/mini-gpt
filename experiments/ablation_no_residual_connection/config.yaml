@@ -1,0 +1,6 @@
+# The goal of this experiment to compare model performance when no residdual connections are used.
+
+sample_temperature: 0.1 # exploit memorization by using low temperature
+training_data_char_limit: 5000 # limit training data to 5k characters to encourage overfitting
+use_residual_connections: false
+num_transformer_layers: 3 # model wouldn't converge with when there are >2 layers without residual connections

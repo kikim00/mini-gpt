@@ -1,0 +1,5 @@
+# The goal of this experiment is to compare model performance when embedding weights are not tied to the final linear layer.
+
+sample_temperature: 0.1 # exploit memorization by using low temperature
+training_data_char_limit: 5000 # limit training data to 5k characters to encourage overfitting
+tie_embedding_weights: false

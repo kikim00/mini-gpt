@@ -41,6 +41,10 @@ class TrainingConfig:
     sample_temperature: float = 0.9
     sample_topk: int = 40
     training_data_char_limit: int = -1  # -1 means use all data
+    use_positional_embedding: bool = True
+    tie_embedding_weights: bool = True
+    use_residual_connections: bool = True
+    num_transformer_layers: int = 5
 
 
 def train(config: TrainingConfig):
@@ -61,11 +65,14 @@ def train(config: TrainingConfig):
     model_config = GPTConfig(
         vocab_size=tokenizer.vocab_size,
         block_size=config.block_size,
-        n_layers=5,
+        n_layers=config.num_transformer_layers,
         n_heads=8,
         d_model=128,
         d_ffn=512,
         dropout=0.1,
+        use_positional_embedding=config.use_positional_embedding,
+        tie_embedding_weights=config.tie_embedding_weights,
+        use_residual_connections=config.use_residual_connections
     )
     model = MiniGPT(model_config).to(config.device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr)
@@ -177,6 +184,52 @@ if __name__ == "__main__":
     p.add_argument("--experiment-path", type=str, default=None)
     p.add_argument("--config", type=str, default=None)
 
+    # model
+    p.add_argument(
+        "--use-positional-embedding",
+        action="store_true",
+        dest="use_positional_embedding",
+        help="Enable positional embeddings",
+    )
+    p.add_argument(
+        "--no-positional-embedding",
+        action="store_false",
+        dest="use_positional_embedding",
+        help="Disable positional embeddings",
+    )
+    p.set_defaults(use_positional_embedding=None)
+    p.add_argument(
+        "--tie-embedding-weights",
+        action="store_true",
+        dest="tie_embedding_weights",
+        help="Tie weights between token embedding and final linear layer",
+    )
+    p.add_argument(
+        "--no-tie-embedding-weights",
+        action="store_false",
+        dest="tie_embedding_weights",
+        help="Do not tie weights between token embedding and final linear layer",
+    )
+    p.set_defaults(tie_embedding_weights=None)
+    p.add_argument(
+        "--use-residual-connections",
+        action="store_true",
+        dest="use_residual_connections",
+        help="Enable residual connections in transformer blocks",
+    )
+    p.add_argument(
+        "--no-residual-connections",
+        action="store_false",
+        dest="use_residual_connections",
+        help="Disable residual connections in transformer blocks",
+    )
+    p.set_defaults(use_residual_connections=None)
+    p.add_argument(
+        "--num-transformer-layers",
+        type=int,
+        help="Number of transformer layers in the model",
+    )
+
     args = p.parse_args()
 
     # Load config. Priority: config file in experiment_path > config file > defaults
@@ -202,12 +255,20 @@ if __name__ == "__main__":
         sample_temperature=args.sample_temperature,
         sample_topk=args.sample_topk,
         training_data_char_limit=args.training_data_char_limit,
+        use_positional_embedding=args.use_positional_embedding,
+        tie_embedding_weights=args.tie_embedding_weights,
+        use_residual_connections=args.use_residual_connections,
+        num_transformer_layers=args.num_transformer_layers,
     )
 
     # set up logger
     log_path = "train.log" if args.experiment_path is None else os.path.join(
         args.experiment_path, "train.log"
     )
+
+    # delete existing log file
+    if os.path.exists(log_path):
+        os.remove(log_path)
 
     logging.basicConfig(
         level=logging.INFO,

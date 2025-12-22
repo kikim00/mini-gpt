@@ -1,4 +1,5 @@
 # The goal of this experiment is to verify if model can succesfully memorize the small training dataset by intentionally
 # overfitting it. It should be able to generate training samples verbatim at training loss around ~0.02.
+
 sample_temperature: 0.1 # exploit memorization by using low temperature
 training_data_char_limit: 5000 # limit training data to 5k characters to encourage overfitting

@@ -1,0 +1,5 @@
+# The goal of this experiment to compare model performance when no positional embeddings are used.
+
+sample_temperature: 0.1 # exploit memorization by using low temperature
+training_data_char_limit: 5000 # limit training data to 5k characters to encourage overfitting
+use_positional_embedding: false
