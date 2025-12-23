@@ -3,7 +3,9 @@ import torch.nn as nn
 
 
 class TokenPositionalEmbedding(nn.Module):
-    def __init__(self, vocab_size, block_size, dim_model, use_positional_embedding=True):
+    def __init__(
+        self, vocab_size, block_size, dim_model, use_positional_embedding=True
+    ):
         super().__init__()
 
         self.token_emb = nn.Embedding(vocab_size, dim_model)

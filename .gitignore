@@ -5,3 +5,4 @@ __pycache__/
 train.log
 **/train.log
 node_modules/
+adhoc/

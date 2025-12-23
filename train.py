@@ -45,6 +45,7 @@ class TrainingConfig:
     tie_embedding_weights: bool = True
     use_residual_connections: bool = True
     num_transformer_layers: int = 5
+    training_eval_steps: int = 100
 
 
 def train(config: TrainingConfig):
@@ -72,23 +73,29 @@ def train(config: TrainingConfig):
         dropout=0.1,
         use_positional_embedding=config.use_positional_embedding,
         tie_embedding_weights=config.tie_embedding_weights,
-        use_residual_connections=config.use_residual_connections
+        use_residual_connections=config.use_residual_connections,
     )
     model = MiniGPT(model_config).to(config.device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr)
 
     start_ts = time.time()
+    train_loss_sum = 0.0
+
     for i in range(1, config.max_steps + 1):
-        train_loss = train_step(train_dataloader, model, optimizer)
-        if i % 100 == 0:
+        train_loss, logits = train_step(train_dataloader, model, optimizer)
+        train_loss_sum += train_loss.item()
+
+        if i % config.training_eval_steps == 0:
             duration = time.time() - start_ts
             logger.info(
                 "train loss: %.5f, duration: %.2f seconds [Step %s/%s]",
-                train_loss,
+                train_loss_sum / config.training_eval_steps,
                 duration,
                 i,
                 config.max_steps,
             )
+            logger.info("logits mean: %.5f, max: %.5f", logits.mean().item(), logits.max().item())
+            train_loss_sum = 0.0
 
         if i % config.eval_interval == 0:
             eval_loop(eval_dataloader, model, config.eval_steps)
@@ -114,7 +121,7 @@ def train_step(dataloader, model, optimizer):
     loss.backward()
     optimizer.step()
 
-    return loss
+    return loss, logits
 
 
 def eval_loop(dataloader, model, num_steps):

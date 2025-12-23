@@ -1,12 +1,13 @@
+import logging
 from dataclasses import dataclass
 
 import torch.nn as nn
-import logging
 
 from modules.token_positional_embedding import TokenPositionalEmbedding
 from modules.transformer_block import TransformerBlock
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class GPTConfig:
@@ -42,22 +43,32 @@ class MiniGPT(nn.Module):
 
         self.config = config
         self.embeddings = TokenPositionalEmbedding(
-            config.vocab_size, config.block_size, config.d_model, config.use_positional_embedding
+            config.vocab_size,
+            config.block_size,
+            config.d_model,
+            config.use_positional_embedding,
         )
         self.transformer_blocks = nn.ModuleList(
             [
                 TransformerBlock(
-                    config.d_model, config.n_heads, config.block_size, config.d_ffn, dropout=config.dropout, use_residual_connections=config.use_residual_connections
+                    config.d_model,
+                    config.n_heads,
+                    config.block_size,
+                    config.d_ffn,
+                    dropout=config.dropout,
+                    use_residual_connections=config.use_residual_connections,
                 )
                 for _ in range(config.n_layers)
             ]
         )
         self.final_ln = nn.LayerNorm(config.d_model)
         self.final_linear = nn.Linear(config.d_model, config.vocab_size)
-        # self.apply(init_weights)
-        
+        self.apply(init_weights)
+
         if config.tie_embedding_weights:
-            logger.info("Tying embedding weights between token embedding and final linear layer.")
+            logger.info(
+                "Tying embedding weights between token embedding and final linear layer."
+            )
             self.final_linear.weight = self.embeddings.token_emb.weight
         self.loss = nn.CrossEntropyLoss()
 
