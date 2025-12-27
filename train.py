@@ -26,13 +26,13 @@ class TrainingConfig:
             if v is not None:
                 setattr(self, k, v)
 
-    batch_size: int = 32
+    batch_size: int = 64
     block_size: int = 512
     lr: float = 3e-4
-    max_steps: int = 10_000
+    max_steps: int = 2_000
     eval_interval: int = 250
     eval_steps: int = 50
-    device: str = "mps"
+    device: str = "cuda"
     sample_prompt: str = (
         "In the late summer of that year we lived in a house in a village that "
         "looked across the river "
@@ -44,8 +44,9 @@ class TrainingConfig:
     use_positional_embedding: bool = True
     tie_embedding_weights: bool = True
     use_residual_connections: bool = True
-    num_transformer_layers: int = 5
+    num_transformer_layers: int = 4
     training_eval_steps: int = 100
+    enable_post_ln: bool = False
 
 
 def train(config: TrainingConfig):
@@ -67,13 +68,14 @@ def train(config: TrainingConfig):
         vocab_size=tokenizer.vocab_size,
         block_size=config.block_size,
         n_layers=config.num_transformer_layers,
-        n_heads=8,
+        n_heads=4,
         d_model=128,
         d_ffn=512,
         dropout=0.1,
         use_positional_embedding=config.use_positional_embedding,
         tie_embedding_weights=config.tie_embedding_weights,
         use_residual_connections=config.use_residual_connections,
+        enable_post_ln=config.enable_post_ln,
     )
     model = MiniGPT(model_config).to(config.device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr)
@@ -94,7 +96,7 @@ def train(config: TrainingConfig):
                 i,
                 config.max_steps,
             )
-            logger.info("logits mean: %.5f, max: %.5f", logits.mean().item(), logits.max().item())
+            # logger.info("logits mean: %.5f, max: %.5f", logits.mean().item(), logits.max().item())
             train_loss_sum = 0.0
 
         if i % config.eval_interval == 0:
@@ -236,6 +238,19 @@ if __name__ == "__main__":
         type=int,
         help="Number of transformer layers in the model",
     )
+    p.add_argument(
+        "--enable-post-ln",
+        action="store_true",
+        dest="enable_post_ln",
+        help="Enable post-layer normalization",
+    )
+    p.add_argument(
+        "--disable-post-ln",
+        action="store_false",
+        dest="enable_post_ln",
+        help="Disable post-layer normalization",
+    )
+    p.set_defaults(enable_post_ln=None)
 
     args = p.parse_args()
 
@@ -266,6 +281,7 @@ if __name__ == "__main__":
         tie_embedding_weights=args.tie_embedding_weights,
         use_residual_connections=args.use_residual_connections,
         num_transformer_layers=args.num_transformer_layers,
+        enable_post_ln=args.enable_post_ln,
     )
 
     # set up logger

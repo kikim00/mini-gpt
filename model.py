@@ -21,6 +21,7 @@ class GPTConfig:
     use_positional_embedding: bool
     tie_embedding_weights: bool
     use_residual_connections: bool
+    enable_post_ln: bool
 
 
 def init_weights(module):
@@ -57,10 +58,12 @@ class MiniGPT(nn.Module):
                     config.d_ffn,
                     dropout=config.dropout,
                     use_residual_connections=config.use_residual_connections,
+                    enable_post_ln=config.enable_post_ln,
                 )
                 for _ in range(config.n_layers)
             ]
         )
+
         self.final_ln = nn.LayerNorm(config.d_model)
         self.final_linear = nn.Linear(config.d_model, config.vocab_size)
         self.apply(init_weights)
@@ -81,7 +84,12 @@ class MiniGPT(nn.Module):
         x = self.embeddings(tokens)
         for block in self.transformer_blocks:
             x = block(x)  # (B, T, C)
-        before_linear = self.final_ln(x)  # (B, T, C)
+
+        if self.config.enable_post_ln:
+            before_linear = x  # No need to normalize for post-LN
+        else:
+            before_linear = self.final_ln(x)  # normalize for pre-LN
+
         logits = self.final_linear(before_linear)  # (B, T, vocab_size)
 
         loss = (
